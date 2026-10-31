@@ -61,7 +61,7 @@ func (t Target) Fetch(config *Config) ([]GitHubItem, error) {
 	req.URL.RawQuery = query.Encode()
 
 	if config.Server.GitHubToken != "" {
-		req.Header.Set("Authentication", "Bearer "+config.Server.GitHubToken)
+		req.Header.Set("Authorization", "Bearer "+config.Server.GitHubToken)
 	}
 
 	resp, err := client.Do(req)
