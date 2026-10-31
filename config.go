@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -11,9 +12,11 @@ import (
 )
 
 type ConfigServer struct {
+	baseUri  *url.URL
 	interval time.Duration
 
 	Port          int    `yaml:"port"`
+	BaseURL       string `yaml:"base_url"`
 	FetchInterval string `yaml:"fetch_interval"`
 	GitHubToken   string `yaml:"github_token"`
 }
@@ -32,6 +35,13 @@ func (c *Config) Init() error {
 	if c.Server.Port <= 0 || c.Server.Port > 65535 {
 		return fmt.Errorf("invalid server.port %d", c.Server.Port)
 	}
+
+	uri, err := url.Parse(c.Server.BaseURL)
+	if err != nil {
+		return fmt.Errorf("invalid server.base_url: %s", err)
+	}
+
+	c.Server.baseUri = uri
 
 	// default timeout
 	if c.Server.FetchInterval == "" {
@@ -67,6 +77,7 @@ func (c *Config) Store() error {
 			"$.targets": {yaml.HeadComment("")},
 
 			"$.server.port":           {yaml.HeadComment(" port to serve gitmon on (required; default 9229)")},
+			"$.server.base_url":       {yaml.HeadComment(" base_url gitmon is serving on (required; default http://localhost:9229)")},
 			"$.server.fetch_interval": {yaml.HeadComment(" fetch interval (required; default 30m)")},
 			"$.server.github_token":   {yaml.HeadComment(" github api token (optional)")},
 		}
@@ -92,6 +103,7 @@ func LoadConfig() (*Config, error) {
 	cfg := &Config{
 		Server: ConfigServer{
 			Port:          9229,
+			BaseURL:       "http://localhost:9229",
 			FetchInterval: "30m",
 		},
 	}

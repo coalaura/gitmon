@@ -1,47 +1,35 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/coalaura/lock"
 )
 
 type Cache struct {
-	cache   *lock.SingleFlightMap[string, []Entry]
-	targets map[string]*Target
+	cache *lock.SingleFlightMap[string, []Entry]
 }
 
 type Entry struct {
-	User User `json:"user"`
-
-	ID        string     `json:"id"`
-	Type      string     `json:"type"`
-	URL       string     `json:"url"`
-	Title     string     `json:"title"`
-	State     string     `json:"state"`
-	CreatedAt *time.Time `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	Draft     bool       `json:"draft"`
+	ID        string
+	Type      string
+	URL       string
+	Title     string
+	Summary   string
+	User      string
+	State     string
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+	Draft     bool
 }
 
-type User struct {
-	Name   string `json:"name"`
-	Avatar string `json:"avatar"`
-	URL    string `json:"url"`
-}
-
-var errNotFound = errors.New("target not found")
-
-func (c *Cache) Get(name string) ([]Entry, error) {
-	target, ok := c.targets[name]
-	if !ok {
-		return nil, errNotFound
-	}
-
+func (c *Cache) Get(config *Config, target *Target, name string) ([]Entry, error) {
 	return c.cache.GetOrFillWithTTL(name, config.Server.interval, func() ([]Entry, error) {
-		data, err := target.Fetch()
+		data, err := target.Fetch(config)
 		if err != nil {
 			return nil, err
 		}
@@ -64,16 +52,12 @@ func (c *Cache) Get(name string) ([]Entry, error) {
 			}
 
 			entries = append(entries, Entry{
-				User: User{
-					Name:   entry.User.Login,
-					Avatar: entry.User.AvatarURL,
-					URL:    entry.User.HtmlURL,
-				},
-
 				ID:        id,
 				Type:      typ,
 				URL:       entry.HtmlURL,
 				Title:     id + " " + entry.Title,
+				Summary:   truncate(entry.Body, 128),
+				User:      entry.User.Login,
 				State:     entry.State,
 				CreatedAt: entry.CreatedAt,
 				UpdatedAt: entry.UpdatedAt,
@@ -86,14 +70,99 @@ func (c *Cache) Get(name string) ([]Entry, error) {
 }
 
 func NewCache() *Cache {
-	targets := make(map[string]*Target, len(config.Targets))
-
-	for i, target := range config.Targets {
-		targets[target.Name] = &config.Targets[i]
-	}
-
 	return &Cache{
-		cache:   lock.NewSingleFlightMap[string, []Entry](),
-		targets: targets,
+		cache: lock.NewSingleFlightMap[string, []Entry](),
 	}
+}
+
+func truncate(s string, n int) string {
+	if n < 0 {
+		n = 0
+	}
+
+	var (
+		end     int
+		size    int
+		changed bool
+	)
+
+	for end < len(s) && size < n {
+		start := end
+		char, width := utf8.DecodeRuneInString(s[end:])
+
+		if !unicode.IsSpace(char) {
+			if width > n-size {
+				break
+			}
+
+			end += width
+			size += width
+
+			continue
+		}
+
+		end += width
+
+		for end < len(s) {
+			char, width = utf8.DecodeRuneInString(s[end:])
+			if !unicode.IsSpace(char) {
+				break
+			}
+
+			end += width
+		}
+
+		size++
+
+		if end-start != 1 || s[start] != ' ' {
+			changed = true
+		}
+	}
+
+	truncated := end < len(s)
+
+	if !changed {
+		if truncated {
+			return s[:end] + "..."
+		}
+
+		return s
+	}
+
+	var buf strings.Builder
+
+	if truncated {
+		buf.Grow(size + len("..."))
+	} else {
+		buf.Grow(size)
+	}
+
+	var (
+		last    int
+		inSpace bool
+	)
+
+	for i, char := range s[:end] {
+		if unicode.IsSpace(char) {
+			if !inSpace {
+				buf.WriteString(s[last:i])
+				buf.WriteByte(' ')
+
+				inSpace = true
+			}
+		} else if inSpace {
+			last = i
+			inSpace = false
+		}
+	}
+
+	if !inSpace {
+		buf.WriteString(s[last:end])
+	}
+
+	if truncated {
+		buf.WriteString("...")
+	}
+
+	return buf.String()
 }

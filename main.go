@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -11,18 +10,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-var (
-	config *Config
-
-	log = plain.New(plain.WithDate(plain.RFC3339Local))
-)
+var log = plain.New(plain.WithDate(plain.RFC3339Local))
 
 func main() {
 	var err error
 
 	log.Println("Loading config...")
 
-	config, err = LoadConfig()
+	config, err := LoadConfig()
 	log.MustFail(err)
 
 	log.Println("Preparing cache...")
@@ -37,29 +32,10 @@ func main() {
 	r.Use(plain.RealIPMiddleware())
 	r.Use(log.Middleware())
 
-	r.Get("/{name}", func(w http.ResponseWriter, r *http.Request) {
-		name := chi.URLParam(r, "name")
+	handler := HandleRequest(config, cache)
 
-		data, err := cache.Get(name)
-		if err != nil {
-			if errors.Is(err, errNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-
-				return
-			}
-
-			w.WriteHeader(http.StatusInternalServerError)
-
-			log.Warnln(err)
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		json.NewEncoder(w).Encode(data)
-	})
+	r.Get("/{name}", handler)
+	r.Get("/{name}.{format}", handler)
 
 	addr := config.Addr()
 

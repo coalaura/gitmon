@@ -17,6 +17,7 @@ type GitHubItem struct {
 	User      GitHubUser `json:"user"`
 	HtmlURL   string     `json:"html_url"`
 	Title     string     `json:"title"`
+	Body      string     `json:"body"`
 	State     string     `json:"state"`
 	Number    int64      `json:"number"`
 	CreatedAt *time.Time `json:"created_at"`
@@ -34,7 +35,7 @@ var client = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-func (t Target) Fetch() ([]GitHubItem, error) {
+func (t Target) Fetch(config *Config) ([]GitHubItem, error) {
 	req, err := http.NewRequest("GET", "https://api.github.com/search/issues", nil)
 	if err != nil {
 		return nil, err
