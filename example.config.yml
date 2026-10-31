@@ -1,0 +1,12 @@
+server:
+  # port to serve gitmon on (required; default 9229)
+  port: 9229
+  # fetch interval (required; default 30m)
+  fetch_interval: 30m
+  # github api token (optional)
+  github_token: ""
+
+targets:
+- name: issues
+  type: issues
+  filter: user:coalaura is:public is:open archived:false -author:coalaura
