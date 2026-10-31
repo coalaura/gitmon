@@ -1,0 +1,29 @@
+pages:
+  - name: GitHub
+    columns:
+      - size: full
+        widgets:
+          - type: split-column
+            widgets:
+              - type: custom-api
+                title: GitHub issues
+                title-url: https://github.com/search?q=user%3Acoalaura+is%3Apublic+is%3Aopen+is%3Aissue&type=issues&s=updated&o=desc
+                url: https://git.example.com/issues.json
+                cache: 5m
+                options:
+                  collapse-after: 6
+                  show-summary: false
+                  empty-message: No open issues.
+                template: &gitmon-template |
+                  $include: gitmon.html
+
+              - type: custom-api
+                title: GitHub pull requests
+                title-url: https://github.com/search?q=user%3Acoalaura+is%3Apublic+is%3Aopen+is%3Apr&type=issues&s=updated&o=desc
+                url: https://git.example.com/prs.json
+                cache: 5m
+                options:
+                  collapse-after: 6
+                  show-summary: false
+                  empty-message: No open pull requests.
+                template: *gitmon-template
