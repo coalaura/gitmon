@@ -9,21 +9,29 @@
 		{{ range $items }}
 			{{ $url := .String "url" }}
 			{{ $repository := findSubmatch "^https://github[.]com/([^/]+/[^/]+)/(issues|pull)/[0-9]+" $url }}
-			{{ $timestamp := .String "date_modified" }}
-			{{ $timeLabel := "Updated" }}
-
-			{{ if not $timestamp }}
-				{{ $timestamp = .String "date_published" }}
-				{{ $timeLabel = "Opened" }}
-			{{ end }}
+			{{ $timestamp := .String "date_published" }}
+			{{ $updated := .String "date_modified" }}
+			{{ $timeLabel := "Opened" }}
+			{{ $author := .String "authors.0.name" }}
 
 			<li>
-				<a class="title size-title-dynamic color-primary-if-not-visited" href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ .String "title" }}</a>
+				<div class="flex items-center" style="gap: 6px;">
+					{{ if $author }}
+						<a class="shrink-0" href="https://github.com/{{ $author }}" title="Author: {{ $author }}" target="_blank" rel="noopener noreferrer">
+							<img src="https://github.com/{{ $author }}.png?size=32" alt="{{ $author }}" width="14" height="14" loading="lazy" style="border-radius: 50%;">
+						</a>
+					{{ end }}
+
+					<a class="title size-title-dynamic color-primary-if-not-visited block flex-1 min-width-0 text-truncate" href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ .String "title" }}</a>
+				</div>
 
 				{{ if or $timestamp $repository }}
 					<ul class="list-horizontal-text flex-nowrap">
 						{{ if $timestamp }}
 							<li title="{{ $timeLabel }} {{ $timestamp }}" {{ $timestamp | parseTime "rfc3339" | toRelativeTime }}></li>
+						{{ end }}
+						{{ if and $updated (ne $updated $timestamp) }}
+							<li title="Updated {{ $updated }}">↻<span style="padding-left: 3px" {{ $updated | parseTime "rfc3339" | toRelativeTime }}></span></li>
 						{{ end }}
 						{{ if $repository }}
 							<li class="min-width-0">
