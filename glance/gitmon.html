@@ -5,55 +5,40 @@
 {{ else }}
 	{{ $items := .JSON.Array "items" }}
 
-	{{ if not $items }}
-		<p class="color-positive">{{ .Options.StringOr "empty-message" "No open items." }}</p>
-	{{ else }}
-		<div class="flex justify-between gap-10 size-h6 margin-bottom-15">
-			<span class="color-highlight">{{ len $items }} in feed</span>
-			<span>Recently updated first</span>
-		</div>
+	<ul class="list list-gap-14 collapsible-container{{ if .Options.BoolOr "single-line-titles" false }} single-line-titles{{ end }}" data-collapse-after="{{ .Options.IntOr "collapse-after" 6 }}">
+		{{ range $items }}
+			{{ $url := .String "url" }}
+			{{ $repository := findSubmatch "^https://github[.]com/([^/]+/[^/]+)/(issues|pull)/[0-9]+" $url }}
+			{{ $timestamp := .String "date_modified" }}
+			{{ $timeLabel := "Updated" }}
 
-		{{ if ge (len $items) 100 }}
-			<p class="color-primary size-h5 margin-bottom-15">This feed may be incomplete: gitmon currently returns at most 100 matches. Open the widget title to see the full search.</p>
-		{{ end }}
+			{{ if not $timestamp }}
+				{{ $timestamp = .String "date_published" }}
+				{{ $timeLabel = "Opened" }}
+			{{ end }}
 
-		<ul class="list list-gap-14 collapsible-container" data-collapse-after="{{ .Options.IntOr "collapse-after" 6 }}">
-			{{ range $items }}
-				{{ $url := .String "url" }}
-				{{ $repository := findSubmatch "^https://github[.]com/([^/]+/[^/]+)/(issues|pull)/[0-9]+" $url }}
-				{{ $author := .String "authors.0.name" }}
-				{{ $timestamp := .String "date_modified" }}
-				{{ $timeLabel := "Updated" }}
+			<li>
+				<a class="title size-title-dynamic color-primary-if-not-visited" href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ .String "title" }}</a>
 
-				{{ if not $author }}
-					{{ $author = .String "author.name" }}
-				{{ end }}
-
-				{{ if not $timestamp }}
-					{{ $timestamp = .String "date_published" }}
-					{{ $timeLabel = "Opened" }}
-				{{ end }}
-
-				<li>
-					<a class="block size-h4 color-primary-if-not-visited" href="{{ $url }}" target="_blank" rel="noopener noreferrer" style="overflow-wrap: anywhere;">{{ .String "title" }}</a>
-
-					<ul class="list-horizontal-text size-h6 margin-top-3">
-						{{ if $repository }}
-							<li><a href="https://github.com/{{ $repository }}" target="_blank" rel="noopener noreferrer">{{ $repository }}</a></li>
-						{{ end }}
-						{{ if $author }}
-							<li><a href="https://github.com/{{ $author }}" target="_blank" rel="noopener noreferrer">@{{ $author }}</a></li>
-						{{ end }}
+				{{ if or $timestamp $repository }}
+					<ul class="list-horizontal-text flex-nowrap">
 						{{ if $timestamp }}
-							<li title="{{ $timeLabel }} {{ $timestamp }}">{{ $timeLabel }} <span {{ $timestamp | parseTime "rfc3339" | toRelativeTime }}></span></li>
+							<li title="{{ $timeLabel }} {{ $timestamp }}" {{ $timestamp | parseTime "rfc3339" | toRelativeTime }}></li>
+						{{ end }}
+						{{ if $repository }}
+							<li class="min-width-0">
+								<a class="block text-truncate" href="https://github.com/{{ $repository }}" target="_blank" rel="noopener noreferrer">{{ $repository }}</a>
+							</li>
 						{{ end }}
 					</ul>
+				{{ end }}
 
-					{{ if and ($.Options.BoolOr "show-summary" false) (.String "summary") }}
-						<p class="size-h5 color-paragraph margin-top-5 text-truncate-2-lines">{{ .String "summary" }}</p>
-					{{ end }}
-				</li>
-			{{ end }}
-		</ul>
-	{{ end }}
+				{{ if and ($.Options.BoolOr "show-summary" false) (.String "summary") }}
+					<p class="rss-detailed-description text-truncate-2-lines margin-top-10">{{ .String "summary" }}</p>
+				{{ end }}
+			</li>
+		{{ else }}
+			<li>{{ .Options.StringOr "empty-message" "No open items." }}</li>
+		{{ end }}
+	</ul>
 {{ end }}
