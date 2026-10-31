@@ -1,0 +1,17 @@
+name: gitmon
+path: /var/git.example.com
+network: true
+listening: true
+privileged_ports: false
+exec_memory: false
+memfd: false
+writable_files: false
+writable_config: false
+runtime_dir: false
+devices: false
+full_devices: false
+subprocess: false
+separate_log_dir: true
+journald: true
+localhost_only: false
+private_users: false
