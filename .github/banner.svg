@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="320" viewBox="0 0 1120 320" fill="none" role="img" aria-labelledby="title description">
+	<title id="title">gitmon</title>
+	<desc id="description">GitHub issue and pull-request paths curve into an RSS symbol beside the gitmon wordmark. GitHub searches become JSON, RSS and Atom feeds.</desc>
+	<defs>
+		<g id="endpoint">
+			<circle r="12" stroke-width="7"/>
+		</g>
+	</defs>
+
+	<!-- A feed symbol drawn as repository activity: an issue, a pull request, and a node-to-node path. -->
+	<g id="activity-feed" stroke="#F3AA62" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M128 60C212 66 278 132 284 216" stroke-width="9"/>
+		<use href="#endpoint" x="116" y="60"/>
+		<use href="#endpoint" x="284" y="228"/>
+		<path d="M122 120C176 123 221 170 224 216M133 107L120 120L133 133" stroke-width="9"/>
+		<use href="#endpoint" x="224" y="228"/>
+		<g stroke="#82CABB">
+			<circle cx="116" cy="228" r="18" stroke-width="7"/>
+			<circle cx="116" cy="228" r="4" fill="#82CABB" stroke="none"/>
+		</g>
+	</g>
+
+	<!-- Hand-drawn lowercase lettering keeps the silhouette independent of installed fonts. -->
+	<g id="wordmark" stroke="#EEEDE6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M445 155A39 39 0 1 1 367 155A39 39 0 1 1 445 155V208Q445 240 411 240H385"/>
+		<path d="M493 116V194"/>
+		<circle cx="493" cy="77" r="12" fill="#EEEDE6" stroke="none"/>
+		<path d="M548 84V167Q548 194 574 194H584M526 116H582"/>
+		<path d="M625 194V116M625 143Q625 116 652 116Q679 116 679 143V194M679 143Q679 116 706 116Q733 116 733 143V194"/>
+		<path d="M856 155A39 39 0 1 1 778 155A39 39 0 1 1 856 155Z"/>
+		<path d="M901 194V116M901 150Q901 116 938 116Q975 116 975 150V194"/>
+	</g>
+
+	<text x="548" y="260" fill="#A5B5BC" font-family="Arial, Helvetica, sans-serif" font-size="23">GitHub searches as feeds</text>
+</svg>

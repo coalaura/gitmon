@@ -1,4 +1,8 @@
-# gitmon
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/banner.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".github/banner-light.svg">
+  <img alt="gitmon - GitHub issue and pull-request paths forming an RSS feed symbol" src=".github/banner-light.svg">
+</picture>
 
 A small server that turns GitHub issue and pull request searches into JSON, RSS and Atom feeds.
 
